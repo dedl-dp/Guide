@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الأدلة الإرشادية لنظام Blackboard Ultra</title>
+    
+    <!-- استيراد خط تجوال -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --primary: #00767c;        /* أخضر الشعار */
+            --primary-light: #e0f2f1;  /* خلفية فاتحة للأخضر */
+            --primary-hover: #005f63;
+            
+            --blue: #0284c7;           /* اللون الأزرق للـ PDF */
+            --blue-light: #e0f2fe;     /* خلفية فاتحة للأزرق */
+
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            --radius: 16px;
+            --font-main: 'Tajawal', sans-serif;
+        }
+
+        * { box-sizing: border-box; outline: none; }
+
+        body {
+            margin: 0;
+            font-family: var(--font-main);
+            background-color: var(--bg);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* --- Header --- */
+        .header {
+            text-align: center;
+            margin-bottom: 25px;
+            padding: 30px 20px;
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            border: 1px solid var(--border);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 6px;
+            background: linear-gradient(90deg, var(--primary), #80cbc4);
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 0;
+            color: var(--primary);
+        }
+
+        /* --- Tabs --- */
+        .tabs-wrapper {
+            background: var(--card-bg);
+            padding: 8px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--border);
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            font-family: var(--font-main);
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-muted);
+            cursor: pointer;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: #f3f4f6;
+        }
+
+        /* --- Search Box --- */
+        .search-container {
+            position: relative;
+            margin-bottom: 25px;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 16px 50px 16px 20px;
+            border-radius: var(--radius);
+            border: 1px solid var(--border);
+            background: var(--card-bg);
+            font-family: var(--font-main);
+            font-size: 15px;
+            box-shadow: var(--shadow);
+            transition: all 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px var(--primary-light);
+        }
+
+        .search-icon {
+            position: absolute;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            pointer-events: none;
+        }
+
+        /* --- Guide Cards --- */
+        .guides-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .guide-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 16px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid var(--border);
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+        }
+
+        .guide-card:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+            border-color: var(--primary);
+        }
+
+        .guide-info {
+            flex: 1;
+        }
+
+        .guide-category {
+            font-size: 11px;
+            color: var(--primary);
+            font-weight: 700;
+            margin-bottom: 4px;
+            display: block;
+        }
+
+        .guide-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text-main);
+            margin: 0;
+        }
+
+        .guide-actions {
+            display: flex;
+            gap: 8px;
+            margin-right: 15px;
+        }
+
+        .action-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-decoration: none;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        /* أيقونة PDF زرقاء */
+        .action-btn.pdf {
+            background: var(--blue-light);
+            color: var(--blue);
+        }
+        .action-btn.pdf:hover {
+            background: var(--blue);
+            color: white;
+        }
+
+        /* أيقونة الفيديو خضراء */
+        .action-btn.video {
+            background: var(--primary-light);
+            color: var(--primary);
+        }
+        .action-btn.video:hover {
+            background: var(--primary);
+            color: white;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+            font-size: 14px;
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .guide-card {
+                padding: 15px;
+            }
+            .action-btn {
+                width: 36px;
+                height: 36px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        
+        <!-- Header -->
+        <header class="header">
+            <h1>الأدلة الإرشادية لنظام Blackboard Ultra</h1>
+        </header>
+
+        <!-- Tabs -->
+        <div class="tabs-wrapper">
+            <button class="tab-btn active" onclick="switchTab('faculty')">عضو هيئة التدريس</button>
+            <button class="tab-btn" onclick="switchTab('students')">المتعلم</button>
+        </div>
+
+        <!-- Search -->
+        <div class="search-container">
+            <div class="search-icon">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </div>
+            <input type="text" id="searchInput" class="search-input" placeholder="ابحث عن اسم الدليل..." onkeyup="filterGuides()">
+        </div>
+
+        <!-- Guides List -->
+        <div id="guidesList" class="guides-list">
+            <!-- Content injects here -->
+        </div>
+
+        <!-- No Results Msg -->
+        <div id="emptyState" class="empty-state">
+            لا توجد نتائج مطابقة للبحث
+        </div>
+
+    </div>
+
+    <script>
+        // --- البيانات الحقيقية المستخرجة من الجدول ---
+        const guidesData = {
+            faculty: [
+                { category: "بدء الاستخدام", title: "آلية الدخول إلى النظام", pdf: "https://qrco.de/bdeeV8", video: "" },
+                { category: "بدء الاستخدام", title: "تغيير لغة النظام", pdf: "https://qrco.de/bdwdEA", video: "https://youtu.be/vy3m91h1fFw" },
+                { category: "إدارة المحتوى", title: "إنشاء عنصر", pdf: "https://qrco.de/bdeeWZ", video: "https://youtu.be/l63ZESD6Svw" },
+                { category: "إدارة المحتوى", title: "إنشاء محتوى المقرر الدراسي", pdf: "https://qrco.de/bdeeYs", video: "" },
+                { category: "أدوات التواصل", title: "إنشاء اعلان", pdf: "https://qrco.de/beFSg8", video: "" },
+                { category: "أدوات التفاعل", title: "لوحة المناقشة", pdf: "https://qrco.de/bell5c", video: "" }
+            ],
+            students: [
+                { category: "بدء الاستخدام", title: "آلية الدخول إلى النظام", pdf: "https://qrco.de/bfU2rk", video: "" },
+                { category: "بدء الاستخدام", title: "تغيير لغة النظام", pdf: "https://qrco.de/bfSoEd", video: "https://youtu.be/bNH9UJV9Gfs" },
+                { category: "أدوات التواصل", title: "الاطلاع على الإعلانات", pdf: "https://qrco.de/bfYeem", video: "https://youtu.be/FAgtgTRqD48" },
+                { category: "أدوات التواصل", title: "إرسال رسالة عبر أداة رسائل المقرر", pdf: "https://qrco.de/bfHqLJ", video: "https://youtu.be/g3apRPWxCtE" }
+            ]
+        };
+
+        let currentTab = 'faculty';
+
+        function renderGuides() {
+            const container = document.getElementById('guidesList');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            const emptyState = document.getElementById('emptyState');
+            
+            container.innerHTML = '';
+            
+            const data = guidesData[currentTab];
+            let hasResults = false;
+
+            data.forEach(item => {
+                if (item.title.toLowerCase().includes(searchVal) || item.category.toLowerCase().includes(searchVal)) {
+                    hasResults = true;
+                    
+                    const card = document.createElement('div');
+                    card.className = 'guide-card';
+                    
+                    let linksHtml = '';
+                    
+                    if(item.pdf && item.pdf.trim() !== "") {
+                        linksHtml += `
+                            <a href="${item.pdf}" target="_blank" class="action-btn pdf" title="تحميل دليل PDF">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                    <polyline points="14 2 14 8 20 8"></polyline>
+                                    <line x1="16" y1="13" x2="8" y2="13"></line>
+                                    <line x1="16" y1="17" x2="8" y2="17"></line>
+                                    <polyline points="10 9 9 9 8 9"></polyline>
+                                </svg>
+                            </a>`;
+                    }
+                    
+                    if(item.video && item.video.trim() !== "") {
+                        linksHtml += `
+                            <a href="${item.video}" target="_blank" class="action-btn video" title="مشاهدة فيديو">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
+                            </a>`;
+                    }
+
+                    card.innerHTML = `
+                        <div class="guide-info">
+                            <span class="guide-category">${item.category}</span>
+                            <h3 class="guide-title">${item.title}</h3>
+                        </div>
+                        <div class="guide-actions">
+                            ${linksHtml}
+                        </div>
+                    `;
+                    
+                    container.appendChild(card);
+                }
+            });
+
+            emptyState.style.display = hasResults ? 'none' : 'block';
+        }
+
+        function switchTab(type) {
+            currentTab = type;
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('searchInput').value = '';
+            renderGuides();
+        }
+
+        function filterGuides() {
+            renderGuides();
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderGuides();
+        });
+
+    </script>
+</body>
+</html>

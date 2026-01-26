@@ -5,15 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>الأدلة الإرشادية لنظام Blackboard Ultra</title>
     
-    <!-- استيراد خط تجوال -->
+    <!-- خط تجوال -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     
-    <!-- مكتبة لقراءة Google Sheets -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+    <!-- مكتبة SheetJS لقراءة ملفات Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
 
     <style>
+        /* نفس التصميم السابق تماماً */
         :root {
             --primary: #00767c;
             --primary-light: #e0f2f1;
@@ -46,7 +47,6 @@
             padding: 20px;
         }
 
-        /* Header */
         .header {
             text-align: center;
             margin-bottom: 25px;
@@ -77,7 +77,6 @@
             color: var(--primary);
         }
 
-        /* Tabs */
         .tabs-wrapper {
             background: var(--card-bg);
             padding: 8px;
@@ -112,7 +111,6 @@
             background: #f3f4f6;
         }
 
-        /* Search */
         .search-container {
             position: relative;
             margin-bottom: 25px;
@@ -144,12 +142,11 @@
             pointer-events: none;
         }
 
-        /* Guide Cards */
         .guides-list {
             display: flex;
             flex-direction: column;
             gap: 12px;
-            min-height: 200px; /* To avoid layout shift */
+            min-height: 200px;
         }
 
         .guide-card {
@@ -166,9 +163,7 @@
             animation: fadeIn 0.5s forwards;
         }
 
-        @keyframes fadeIn {
-            to { opacity: 1; }
-        }
+        @keyframes fadeIn { to { opacity: 1; } }
 
         .guide-card:hover {
             transform: translateY(-2px);
@@ -217,7 +212,7 @@
         .action-btn.video { background: var(--primary-light); color: var(--primary); }
         .action-btn.video:hover { background: var(--primary); color: white; }
 
-        .empty-state, .loading-state {
+        .empty-state, .loading-state, .error-state {
             text-align: center;
             padding: 40px;
             color: var(--text-muted);
@@ -225,7 +220,8 @@
             display: none;
         }
         
-        /* Loading Spinner */
+        .error-state { color: #ef4444; }
+
         .loader {
             border: 4px solid #f3f3f3;
             border-top: 4px solid var(--primary);
@@ -264,10 +260,15 @@
             <input type="text" id="searchInput" class="search-input" placeholder="ابحث عن اسم الدليل..." onkeyup="filterGuides()">
         </div>
 
-        <!-- Loading State -->
+        <!-- States -->
         <div id="loadingState" class="loading-state" style="display: block;">
             <div class="loader"></div>
-            جاري تحميل الأدلة...
+            جاري قراءة ملف data.xlsx...
+        </div>
+
+        <div id="errorState" class="error-state">
+            <p><strong>تنبيه:</strong> لم نتمكن من قراءة ملف data.xlsx</p>
+            <p style="font-size:12px;">تأكد أن الملف موجود في نفس المجلد، وأنك تقوم بتشغيل الصفحة عبر سيرفر (localhost) وليس بفتح الملف مباشرة، وذلك بسبب سياسات أمان المتصفح.</p>
         </div>
 
         <div id="guidesList" class="guides-list"></div>
@@ -279,48 +280,50 @@
     </div>
 
     <script>
-        // ==========================================
-        //  إعدادات Google Sheet
-        // ==========================================
-        
-        // ضع رابط الـ CSV الذي حصلت عليه من (Publish to web) هنا داخل علامات التنصيص
-        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQp8lz59GwDjwL6ZlRCNLmVU6QkmZ7ekX76Sz9ngwEKBcHxutRGtIRUAKoiZzXQTg/pub?output=csv"; 
-
-        // ==========================================
-
         let guidesData = {
             faculty: [],
             students: []
         };
         let currentTab = 'faculty';
 
-        // دالة لجلب البيانات عند فتح الصفحة
-        function fetchGuides() {
-            if(SHEET_URL === "https://docs.google.com/spreadsheets/d/e/2PACX-1vQp8lz59GwDjwL6ZlRCNLmVU6QkmZ7ekX76Sz9ngwEKBcHxutRGtIRUAKoiZzXQTg/pub?output=csv" || SHEET_URL === "") {
-                alert("الرجاء وضع رابط Google Sheet CSV في الكود");
-                return;
-            }
+        // اسم ملف الإكسل الذي سيتم قراءته
+        const EXCEL_FILE_NAME = 'data.xlsx';
 
-            Papa.parse(SHEET_URL, {
-                download: true,
-                header: true,
-                complete: function(results) {
-                    processData(results.data);
-                },
-                error: function(err) {
-                    console.error("Error fetching data:", err);
-                    document.getElementById('loadingState').textContent = "حدث خطأ في تحميل البيانات";
+        // دالة لجلب الملف وقراءته
+        async function fetchExcelFile() {
+            try {
+                const response = await fetch(EXCEL_FILE_NAME);
+                
+                if (!response.ok) {
+                    throw new Error("File not found");
                 }
-            });
+
+                const arrayBuffer = await response.arrayBuffer();
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                
+                // نفترض أن البيانات في الورقة الأولى
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+                
+                // تحويل الإكسل إلى JSON
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                
+                processData(jsonData);
+
+            } catch (error) {
+                console.error("Error loading excel:", error);
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('errorState').style.display = 'block';
+            }
         }
 
-        // دالة لمعالجة البيانات وتوزيعها
+        // دالة لمعالجة البيانات
         function processData(data) {
             guidesData.faculty = [];
             guidesData.students = [];
 
             data.forEach(row => {
-                // التأكد من أن الصف يحتوي على بيانات
+                // التأكد من وجود البيانات
                 if (!row['عنوان الدليل']) return;
 
                 const item = {
@@ -330,7 +333,7 @@
                     video: row['رابط الفيديو'] || ""
                 };
 
-                // توزيع البيانات حسب النوع
+                // توزيع البيانات
                 const type = row['نوع الدليل'] ? row['نوع الدليل'].trim() : "";
                 
                 if (type.includes("هيئة تدريس")) {
@@ -355,14 +358,12 @@
             const data = guidesData[currentTab];
             let hasResults = false;
 
-            if (data.length === 0) {
-                emptyState.textContent = "لا توجد بيانات للعرض حالياً";
-                emptyState.style.display = 'block';
+            if (data.length === 0 && document.getElementById('loadingState').style.display === 'none') {
+                // إذا لم يكن هناك خطأ ولكن لا توجد بيانات
                 return;
             }
 
             data.forEach(item => {
-                // البحث في العنوان أو التصنيف
                 if (item.title.toLowerCase().includes(searchVal) || item.category.toLowerCase().includes(searchVal)) {
                     hasResults = true;
                     
@@ -371,7 +372,7 @@
                     
                     let linksHtml = '';
                     
-                    if(item.pdf && item.pdf.trim() !== "") {
+                    if(item.pdf && item.pdf.toString().trim() !== "") {
                         linksHtml += `
                             <a href="${item.pdf}" target="_blank" class="action-btn pdf" title="تحميل دليل PDF">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -384,7 +385,7 @@
                             </a>`;
                     }
                     
-                    if(item.video && item.video.trim() !== "") {
+                    if(item.video && item.video.toString().trim() !== "") {
                         linksHtml += `
                             <a href="${item.video}" target="_blank" class="action-btn video" title="مشاهدة فيديو">
                                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg>
@@ -405,7 +406,6 @@
                 }
             });
 
-            emptyState.textContent = "لا توجد نتائج مطابقة للبحث";
             emptyState.style.display = hasResults ? 'none' : 'block';
         }
 
@@ -422,9 +422,8 @@
             renderGuides();
         }
 
-        // تشغيل عند التحميل
         document.addEventListener('DOMContentLoaded', () => {
-            fetchGuides();
+            fetchExcelFile();
         });
 
     </script>

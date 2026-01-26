@@ -9,16 +9,17 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    
+    <!-- مكتبة لقراءة Google Sheets -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
 
     <style>
         :root {
-            --primary: #00767c;        /* أخضر الشعار */
-            --primary-light: #e0f2f1;  /* خلفية فاتحة للأخضر */
+            --primary: #00767c;
+            --primary-light: #e0f2f1;
             --primary-hover: #005f63;
-            
-            --blue: #0284c7;           /* اللون الأزرق للـ PDF */
-            --blue-light: #e0f2fe;     /* خلفية فاتحة للأزرق */
-
+            --blue: #0284c7;
+            --blue-light: #e0f2fe;
             --bg: #f8f9fa;
             --card-bg: #ffffff;
             --text-main: #1f2937;
@@ -45,7 +46,7 @@
             padding: 20px;
         }
 
-        /* --- Header --- */
+        /* Header */
         .header {
             text-align: center;
             margin-bottom: 25px;
@@ -76,7 +77,7 @@
             color: var(--primary);
         }
 
-        /* --- Tabs --- */
+        /* Tabs */
         .tabs-wrapper {
             background: var(--card-bg);
             padding: 8px;
@@ -111,7 +112,7 @@
             background: #f3f4f6;
         }
 
-        /* --- Search Box --- */
+        /* Search */
         .search-container {
             position: relative;
             margin-bottom: 25px;
@@ -143,11 +144,12 @@
             pointer-events: none;
         }
 
-        /* --- Guide Cards --- */
+        /* Guide Cards */
         .guides-list {
             display: flex;
             flex-direction: column;
             gap: 12px;
+            min-height: 200px; /* To avoid layout shift */
         }
 
         .guide-card {
@@ -160,6 +162,12 @@
             border: 1px solid var(--border);
             transition: all 0.2s ease;
             box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+            opacity: 0;
+            animation: fadeIn 0.5s forwards;
+        }
+
+        @keyframes fadeIn {
+            to { opacity: 1; }
         }
 
         .guide-card:hover {
@@ -168,9 +176,7 @@
             border-color: var(--primary);
         }
 
-        .guide-info {
-            flex: 1;
-        }
+        .guide-info { flex: 1; }
 
         .guide-category {
             font-size: 11px;
@@ -205,42 +211,36 @@
             border: 1px solid transparent;
         }
 
-        /* أيقونة PDF زرقاء */
-        .action-btn.pdf {
-            background: var(--blue-light);
-            color: var(--blue);
-        }
-        .action-btn.pdf:hover {
-            background: var(--blue);
-            color: white;
-        }
+        .action-btn.pdf { background: var(--blue-light); color: var(--blue); }
+        .action-btn.pdf:hover { background: var(--blue); color: white; }
 
-        /* أيقونة الفيديو خضراء */
-        .action-btn.video {
-            background: var(--primary-light);
-            color: var(--primary);
-        }
-        .action-btn.video:hover {
-            background: var(--primary);
-            color: white;
-        }
+        .action-btn.video { background: var(--primary-light); color: var(--primary); }
+        .action-btn.video:hover { background: var(--primary); color: white; }
 
-        .empty-state {
+        .empty-state, .loading-state {
             text-align: center;
             padding: 40px;
             color: var(--text-muted);
             font-size: 14px;
             display: none;
         }
+        
+        /* Loading Spinner */
+        .loader {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid var(--primary);
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 10px auto;
+        }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media (max-width: 600px) {
-            .guide-card {
-                padding: 15px;
-            }
-            .action-btn {
-                width: 36px;
-                height: 36px;
-            }
+            .guide-card { padding: 15px; }
+            .action-btn { width: 36px; height: 36px; }
         }
     </style>
 </head>
@@ -248,18 +248,15 @@
 
     <div class="container">
         
-        <!-- Header -->
         <header class="header">
             <h1>الأدلة الإرشادية لنظام Blackboard Ultra</h1>
         </header>
 
-        <!-- Tabs -->
         <div class="tabs-wrapper">
             <button class="tab-btn active" onclick="switchTab('faculty')">عضو هيئة التدريس</button>
             <button class="tab-btn" onclick="switchTab('students')">المتعلم</button>
         </div>
 
-        <!-- Search -->
         <div class="search-container">
             <div class="search-icon">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
@@ -267,12 +264,14 @@
             <input type="text" id="searchInput" class="search-input" placeholder="ابحث عن اسم الدليل..." onkeyup="filterGuides()">
         </div>
 
-        <!-- Guides List -->
-        <div id="guidesList" class="guides-list">
-            <!-- Content injects here -->
+        <!-- Loading State -->
+        <div id="loadingState" class="loading-state" style="display: block;">
+            <div class="loader"></div>
+            جاري تحميل الأدلة...
         </div>
 
-        <!-- No Results Msg -->
+        <div id="guidesList" class="guides-list"></div>
+
         <div id="emptyState" class="empty-state">
             لا توجد نتائج مطابقة للبحث
         </div>
@@ -280,25 +279,71 @@
     </div>
 
     <script>
-        // --- البيانات الحقيقية المستخرجة من الجدول ---
-        const guidesData = {
-            faculty: [
-                { category: "بدء الاستخدام", title: "آلية الدخول إلى النظام", pdf: "https://qrco.de/bdeeV8", video: "" },
-                { category: "بدء الاستخدام", title: "تغيير لغة النظام", pdf: "https://qrco.de/bdwdEA", video: "https://youtu.be/vy3m91h1fFw" },
-                { category: "إدارة المحتوى", title: "إنشاء عنصر", pdf: "https://qrco.de/bdeeWZ", video: "https://youtu.be/l63ZESD6Svw" },
-                { category: "إدارة المحتوى", title: "إنشاء محتوى المقرر الدراسي", pdf: "https://qrco.de/bdeeYs", video: "" },
-                { category: "أدوات التواصل", title: "إنشاء اعلان", pdf: "https://qrco.de/beFSg8", video: "" },
-                { category: "أدوات التفاعل", title: "لوحة المناقشة", pdf: "https://qrco.de/bell5c", video: "" }
-            ],
-            students: [
-                { category: "بدء الاستخدام", title: "آلية الدخول إلى النظام", pdf: "https://qrco.de/bfU2rk", video: "" },
-                { category: "بدء الاستخدام", title: "تغيير لغة النظام", pdf: "https://qrco.de/bfSoEd", video: "https://youtu.be/bNH9UJV9Gfs" },
-                { category: "أدوات التواصل", title: "الاطلاع على الإعلانات", pdf: "https://qrco.de/bfYeem", video: "https://youtu.be/FAgtgTRqD48" },
-                { category: "أدوات التواصل", title: "إرسال رسالة عبر أداة رسائل المقرر", pdf: "https://qrco.de/bfHqLJ", video: "https://youtu.be/g3apRPWxCtE" }
-            ]
-        };
+        // ==========================================
+        //  إعدادات Google Sheet
+        // ==========================================
+        
+        // ضع رابط الـ CSV الذي حصلت عليه من (Publish to web) هنا داخل علامات التنصيص
+        const SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQp8lz59GwDjwL6ZlRCNLmVU6QkmZ7ekX76Sz9ngwEKBcHxutRGtIRUAKoiZzXQTg/pub?output=csv"; 
 
+        // ==========================================
+
+        let guidesData = {
+            faculty: [],
+            students: []
+        };
         let currentTab = 'faculty';
+
+        // دالة لجلب البيانات عند فتح الصفحة
+        function fetchGuides() {
+            if(SHEET_URL === "https://docs.google.com/spreadsheets/d/e/2PACX-1vQp8lz59GwDjwL6ZlRCNLmVU6QkmZ7ekX76Sz9ngwEKBcHxutRGtIRUAKoiZzXQTg/pub?output=csv" || SHEET_URL === "") {
+                alert("الرجاء وضع رابط Google Sheet CSV في الكود");
+                return;
+            }
+
+            Papa.parse(SHEET_URL, {
+                download: true,
+                header: true,
+                complete: function(results) {
+                    processData(results.data);
+                },
+                error: function(err) {
+                    console.error("Error fetching data:", err);
+                    document.getElementById('loadingState').textContent = "حدث خطأ في تحميل البيانات";
+                }
+            });
+        }
+
+        // دالة لمعالجة البيانات وتوزيعها
+        function processData(data) {
+            guidesData.faculty = [];
+            guidesData.students = [];
+
+            data.forEach(row => {
+                // التأكد من أن الصف يحتوي على بيانات
+                if (!row['عنوان الدليل']) return;
+
+                const item = {
+                    category: row['التصنيف'] || "عام",
+                    title: row['عنوان الدليل'],
+                    pdf: row['رابط PDF'] || "",
+                    video: row['رابط الفيديو'] || ""
+                };
+
+                // توزيع البيانات حسب النوع
+                const type = row['نوع الدليل'] ? row['نوع الدليل'].trim() : "";
+                
+                if (type.includes("هيئة تدريس")) {
+                    guidesData.faculty.push(item);
+                } else if (type.includes("المتعلم") || type.includes("طالب")) {
+                    guidesData.students.push(item);
+                }
+            });
+
+            // إخفاء التحميل وعرض البيانات
+            document.getElementById('loadingState').style.display = 'none';
+            renderGuides();
+        }
 
         function renderGuides() {
             const container = document.getElementById('guidesList');
@@ -310,7 +355,14 @@
             const data = guidesData[currentTab];
             let hasResults = false;
 
+            if (data.length === 0) {
+                emptyState.textContent = "لا توجد بيانات للعرض حالياً";
+                emptyState.style.display = 'block';
+                return;
+            }
+
             data.forEach(item => {
+                // البحث في العنوان أو التصنيف
                 if (item.title.toLowerCase().includes(searchVal) || item.category.toLowerCase().includes(searchVal)) {
                     hasResults = true;
                     
@@ -353,6 +405,7 @@
                 }
             });
 
+            emptyState.textContent = "لا توجد نتائج مطابقة للبحث";
             emptyState.style.display = hasResults ? 'none' : 'block';
         }
 
@@ -369,8 +422,9 @@
             renderGuides();
         }
 
+        // تشغيل عند التحميل
         document.addEventListener('DOMContentLoaded', () => {
-            renderGuides();
+            fetchGuides();
         });
 
     </script>
